@@ -22,8 +22,6 @@ def escape_braces(text: str) -> str:
 
 def load_schema_from_sqlite(db_id: str) -> str:
     db_path = DB_ROOT / db_id / f"{db_id}.sqlite"
-    if not db_path.exists():
-        raise FileNotFoundError(f"Missing SQLite file for database '{db_id}'.")
 
     lines: List[str] = []
     conn = sqlite3.connect(db_path.as_posix())
@@ -70,7 +68,7 @@ def main() -> None:
         base_url=os.environ["OPENAI_BASE_URL"],
         api_key=os.environ["OPENAI_API_KEY"],
     )
-    model_name = os.environ["OPENAI_MODEL_NAME"]
+    model_name = "o3"
 
     existing: List[Dict[str, Any]] = []
     try:
@@ -111,6 +109,7 @@ def main() -> None:
             "question": obj.get("question"),
             "nl2sql_question": obj.get("nl2sql_question"),
             "sql_answer": obj.get("sql_answer"),
+            "doc_type": obj.get("doc_type"),
             "doc_desc": obj.get("doc_desc"),
         }
         next_id += 1

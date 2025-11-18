@@ -1,0 +1,29 @@
+[
+  {
+    "id": 0,
+    "db_id": "california_schools",
+    "question": "At the magnet school with the highest percentage of students eligible for free or reduced-price meals in the 2021–22 academic year, what minimum GPA must students keep to remain eligible for extracurricular activities?",
+    "nl2sql_question": "Which magnet school reports the highest K–12 free-or-reduced-price meal eligibility percentage for the 2021–22 academic year?",
+    "sql_answer": "SELECT f.\"School Name\" FROM frpm AS f JOIN schools AS s ON f.CDSCode = s.CDSCode WHERE s.Magnet = 1 AND f.\"Academic Year\" = '2021-22' ORDER BY CAST(f.\"Percent (%) Eligible FRPM (K-12)\" AS REAL) DESC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Student Handbook of the identified magnet school — narrative section outlining academic eligibility for extracurricular participation, specifically the minimum cumulative GPA students must maintain."
+  },
+  {
+    "id": 1,
+    "db_id": "california_schools",
+    "question": "For the school district that oversees the high school with the greatest number of students scoring 1500 or higher on the SAT, how many community-service hours must students complete to graduate?",
+    "nl2sql_question": "Which school district oversees the high school that has the highest count of students scoring 1500 or above on the SAT?",
+    "sql_answer": "SELECT sat.dname FROM satscores AS sat JOIN schools AS sch ON sch.CDSCode = sat.cds WHERE sch.EILCode = 'HS' ORDER BY sat.NumGE1500 DESC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "The Graduation Requirements section of the identified district’s official student handbook, containing the specific numeric requirement for community-service hours that students must complete to earn a high-school diploma."
+  },
+  {
+    "id": 2,
+    "db_id": "california_schools",
+    "question": "For the California county whose charter high schools post the highest average SAT mathematics score, what minimum cumulative GPA must students keep to be eligible for that county’s academic scholarship program?",
+    "nl2sql_question": "Which California county has charter high schools with the highest average SAT Math score?",
+    "sql_answer": "SELECT sch.County AS CountyName FROM schools sch JOIN satscores sat ON sch.CDSCode = sat.cds WHERE sch.Charter = 1 AND sch.EILCode = 'HS' GROUP BY sch.County ORDER BY AVG(sat.AvgScrMath) DESC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "County-level Academic Scholarship Program policy document for the identified county, containing narrative language that specifies the minimum cumulative GPA students must maintain to qualify for the scholarship."
+  }
+]
