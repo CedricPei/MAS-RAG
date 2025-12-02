@@ -12,8 +12,11 @@ from question_doc_prompt import SYSTEM_PROMPT, USER_PROMPT
 
 DB_ROOT = Path("dev_databases")
 OUTPUT_PATH = "multi_source_questions.json"
-TARGET_DB_ID = "california_schools"
-QUESTION_COUNT = 3
+TARGET_DB_IDS = [
+    "california_schools",
+    "superhero",
+]
+QUESTION_PER_DB = 5
 
 
 def escape_braces(text: str) -> str:
@@ -28,7 +31,7 @@ def load_schema_from_sqlite(db_id: str) -> str:
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT name FROM sqlite_master "
+            "SELECT name FROM sqlite_master " 
             "WHERE type='table' AND name NOT LIKE 'sqlite_%' "
             "ORDER BY name"
         )
@@ -68,7 +71,7 @@ def main() -> None:
         base_url=os.environ["OPENAI_BASE_URL"],
         api_key=os.environ["OPENAI_API_KEY"],
     )
-    model_name = "o3"
+    model_name = "gpt-5"
 
     existing: List[Dict[str, Any]] = []
     try:
@@ -82,41 +85,42 @@ def main() -> None:
         ids = [int(record.get("id", -1)) for record in existing]
         next_id = max(ids) + 1 if ids else 0
 
-    schema_text = load_schema_from_sqlite(TARGET_DB_ID)
-    column_doc_text = load_column_doc(TARGET_DB_ID)
+    for db_id in TARGET_DB_IDS:
+        schema_text = load_schema_from_sqlite(db_id)
+        column_doc_text = load_column_doc(db_id)
 
-    for _ in tqdm(range(QUESTION_COUNT), desc=f"Generating for {TARGET_DB_ID}", unit="q"):
-        user_prompt = USER_PROMPT.format(
-            SCHEMA=escape_braces(schema_text),
-            COLUMN_DOC=escape_braces(column_doc_text),
-        )
+        for _ in tqdm(range(QUESTION_PER_DB), desc=f"Generating for {db_id}", unit="q"):
+            user_prompt = USER_PROMPT.format(
+                SCHEMA=escape_braces(schema_text),
+                COLUMN_DOC=escape_braces(column_doc_text),
+            )
 
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0,
-            response_format={"type": "json_object"},
-        )
-        content = response.choices[0].message.content or "{}"
-        obj = json.loads(content)
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            content = response.choices[0].message.content or "{}"
+            obj = json.loads(content)
 
-        record = {
-            "id": next_id,
-            "db_id": TARGET_DB_ID,
-            "question": obj.get("question"),
-            "nl2sql_question": obj.get("nl2sql_question"),
-            "sql_answer": obj.get("sql_answer"),
-            "doc_type": obj.get("doc_type"),
-            "doc_desc": obj.get("doc_desc"),
-        }
-        next_id += 1
+            record = {
+                "id": next_id,
+                "db_id": db_id,
+                "question": obj.get("question"),
+                "nl2sql_question": obj.get("nl2sql_question"),
+                "sql_answer": obj.get("sql_answer"),
+                "doc_type": obj.get("doc_type"),
+                "doc_desc": obj.get("doc_desc"),
+            }
+            next_id += 1
 
-        existing.append(record)
-        with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-            json.dump(existing, f, ensure_ascii=False, indent=2)
+            existing.append(record)
+            with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+                json.dump(existing, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
