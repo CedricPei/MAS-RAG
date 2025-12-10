@@ -18,7 +18,7 @@ TARGET_DB_IDS = [
     # "superhero",
 ]
 TARGET_QUESTION_PER_DB = 5
-COLLECTION_QUESTION_PER_DB = 0
+COLLECTION_QUESTION_PER_DB = 5
 
 
 def escape_braces(text: str) -> str:
@@ -76,34 +76,39 @@ def main() -> None:
     model_name = "gpt-5"
 
     existing: List[Dict[str, Any]] = []
-    try:
-        with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-    except FileNotFoundError:
-        existing = []
-
     next_id = 0
-    if existing:
-        ids = [int(record.get("id", -1)) for record in existing]
-        next_id = max(ids) + 1 if ids else 0
 
     for db_id in TARGET_DB_IDS:
         schema_text = load_schema_from_sqlite(db_id)
         column_doc_text = load_column_doc(db_id)
+        existing_for_db: List[Dict[str, Any]] = []  # Start with empty list for each database
 
-        # Targeted questions (generate one by one)
-        user_prompt = TARGET_USER_PROMPT.format(
-            SCHEMA=escape_braces(schema_text),
-            COLUMN_DOC=escape_braces(column_doc_text),
-        )
         for _ in tqdm(range(TARGET_QUESTION_PER_DB), desc=f"Generating targeted for {db_id}", unit="q"):
+            # Format all existing questions for this database (only question text)
+            existing_questions_text = ""
+            if existing_for_db:
+                existing_questions_list = []
+                for r in existing_for_db:
+                    q = r.get('question', '')
+                    if q:
+                        existing_questions_list.append(q)
+                existing_questions_text = "\n".join(existing_questions_list)
+            else:
+                existing_questions_text = "(No existing questions yet)"
+            
+            user_prompt = TARGET_USER_PROMPT.format(
+                SCHEMA=escape_braces(schema_text),
+                COLUMN_DOC=escape_braces(column_doc_text),
+                EXISTING_QUESTIONS=escape_braces(existing_questions_text),
+            )
+            
             targeted_resp = client.chat.completions.create(
                 model=model_name,
                 messages=[
                     {"role": "system", "content": TARGET_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=0.8,
+                temperature=0.4,
                 response_format={"type": "json_object"},
             )
             content = targeted_resp.choices[0].message.content or "{}"
@@ -119,14 +124,29 @@ def main() -> None:
             }
             next_id += 1
             existing.append(record)
+            existing_for_db.append(record)  # Update local list for next iteration
             with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
                 json.dump(existing, f, ensure_ascii=False, indent=2)
-
-        collection_prompt = COLLECTION_USER_PROMPT.format(
-            SCHEMA=escape_braces(schema_text),
-            COLUMN_DOC=escape_braces(column_doc_text),
-        )
+        
+        
         for _ in tqdm(range(COLLECTION_QUESTION_PER_DB), desc=f"Generating collection for {db_id}", unit="q"):
+            existing_questions_text = ""
+            if existing_for_db:
+                existing_questions_list = []
+                for r in existing_for_db:
+                    q = r.get('question', '')
+                    if q:
+                        existing_questions_list.append(q)
+                existing_questions_text = "\n".join(existing_questions_list)
+            else:
+                existing_questions_text = "(No existing questions yet)"
+            
+            collection_prompt = COLLECTION_USER_PROMPT.format(
+                SCHEMA=escape_braces(schema_text),
+                COLUMN_DOC=escape_braces(column_doc_text),
+                EXISTING_QUESTIONS=escape_braces(existing_questions_text),
+            )
+            
             collection_resp = client.chat.completions.create(
                 model=model_name,
                 messages=[
@@ -149,6 +169,7 @@ def main() -> None:
             }
             next_id += 1
             existing.append(record)
+            existing_for_db.append(record)  # Update local list for next iteration
             with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
                 json.dump(existing, f, ensure_ascii=False, indent=2)
 

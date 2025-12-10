@@ -1,0 +1,92 @@
+[
+  {
+    "id": 0,
+    "db_id": "california_schools",
+    "question": "For the charter high school with the highest average SAT math score, what is the required number of community service hours for graduation in its student handbook?",
+    "nl2sql_question": "Which charter high school has the highest average SAT math score?",
+    "sql_answer": "SELECT sc.School FROM satscores ss JOIN schools sc ON ss.cds = sc.CDSCode WHERE ss.rtype='S' AND sc.Charter=1 AND sc.EILCode='HS' ORDER BY ss.AvgScrMath DESC, sc.School ASC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Student Handbook — Graduation Requirements for the identified charter high school; narrative policy text that specifies the exact number of community service hours students must complete to graduate (single numeric requirement, with any stated exceptions)."
+  },
+  {
+    "id": 1,
+    "db_id": "california_schools",
+    "question": "For the active, non‑magnet school with at least 50 SAT test takers that has the highest percentage of students eligible for free or reduced‑price meals, what is the number of unexcused absences that triggers a formal attendance intervention in its student handbook?",
+    "nl2sql_question": "Which school ranks highest by Percent Eligible FRPM (K-12) among active, non-magnet schools that report at least 50 SAT test takers?",
+    "sql_answer": "SELECT s.sname FROM satscores AS s JOIN frpm AS f ON s.cds = f.CDSCode JOIN schools AS sc ON f.CDSCode = sc.CDSCode WHERE s.rtype = 'S' AND sc.StatusType = 'Active' AND sc.Magnet = 0 AND s.NumTstTakr >= 50 ORDER BY f.\"Percent (%) Eligible FRPM (K-12)\" DESC, s.sname ASC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Student Handbook for the identified school — narrative attendance policy section that explicitly states the threshold number of unexcused absences that triggers a formal attendance intervention (such as an attendance contract or SART/SARB referral), including any effective date or term/year scope."
+  },
+  {
+    "id": 2,
+    "db_id": "california_schools",
+    "question": "For the school that opened most recently among those with at least one SAT test taker, what is the maximum number of library books a student may check out at once under its library circulation policy?",
+    "nl2sql_question": "Which school has the most recent open date among schools with reported SAT test takers?",
+    "sql_answer": "SELECT s.School FROM schools s JOIN satscores t ON s.CDSCode = t.cds WHERE t.NumTstTakr > 0 ORDER BY s.OpenDate DESC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Library Circulation Policy for the identified school — narrative text that states the maximum number of books a student may have checked out simultaneously, noting any grade-level exceptions or universal limit."
+  },
+  {
+    "id": 3,
+    "db_id": "california_schools",
+    "question": "For the active school with the smallest enrollment-to-SAT-test-taker ratio, what is the maximum class size permitted under its class size policy?",
+    "nl2sql_question": "Which active school has the lowest ratio of total enrollment to number of SAT test takers?",
+    "sql_answer": "SELECT sch.School FROM schools AS sch JOIN satscores AS sat ON sch.CDSCode = sat.cds WHERE sch.StatusType = 'Active' AND sat.NumTstTakr > 0 ORDER BY (CAST(sat.enroll12 AS FLOAT) / CAST(sat.NumTstTakr AS FLOAT)) ASC, sch.School ASC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Class Size Policy for the identified school — narrative policy or handbook section that states the school-wide maximum number of students allowed in a standard general education classroom (a single explicit cap)."
+  },
+  {
+    "id": 4,
+    "db_id": "california_schools",
+    "question": "For the primarily virtual school with the highest SAT excellence rate, what minimum GPA is required to participate in athletics under its athletics eligibility policy?",
+    "nl2sql_question": "Which school classified as primarily virtual has the highest SAT excellence rate (NumGE1500 divided by NumTstTakr) among school-level SAT records?",
+    "sql_answer": "SELECT s.School FROM schools s JOIN satscores sat ON s.CDSCode = sat.cds WHERE s.Virtual = 'V' AND sat.rtype = 'S' AND sat.NumTstTakr > 0 ORDER BY (sat.NumGE1500*1.0)/sat.NumTstTakr DESC LIMIT 1;",
+    "doc_type": "targeted_rule",
+    "doc_desc": "Athletics Eligibility Policy or Student-Athlete Handbook for the identified school — narrative clause specifying the minimum GPA students must maintain to participate in interscholastic athletics (e.g., a numeric threshold like 2.0), including any immediate eligibility requirement rather than general academic standing details."
+  },
+  {
+    "id": 5,
+    "db_id": "california_schools",
+    "question": "Within the school district that has the greatest total number of SAT test takers across its active schools, which school has the earliest regular-day start time according to the district’s published bell schedules?",
+    "nl2sql_question": "Which school district has the highest total number of SAT test takers across its active schools?",
+    "sql_answer": "SELECT s.dname FROM satscores s JOIN schools sch ON s.cds = sch.CDSCode WHERE sch.StatusType = 'Active' AND s.NumTstTakr IS NOT NULL GROUP BY s.dname ORDER BY SUM(s.NumTstTakr) DESC LIMIT 1;",
+    "doc_type": "collection_rule",
+    "doc_desc": "District-wide bell schedule directory covering all schools in the district, listing each school’s regular-day start and dismissal times so you can identify which school starts the earliest among them. This is a collection-level document spanning multiple schools within the district."
+  },
+  {
+    "id": 6,
+    "db_id": "california_schools",
+    "question": "Within the county whose active schools have the highest average SAT math score, which district enforces the strictest cell phone ban during the school day according to the county office’s discipline policy compendium?",
+    "nl2sql_question": "Which county’s active schools have the highest average SAT math score?",
+    "sql_answer": "SELECT s.cname FROM satscores s JOIN schools sch ON s.cds = sch.CDSCode WHERE sch.StatusType = 'Active' GROUP BY s.cname ORDER BY AVG(s.AvgScrMath) DESC LIMIT 1;",
+    "doc_type": "collection_rule",
+    "doc_desc": "Collection_rule: A county office discipline policy compendium that spans multiple districts within the returned county, comparing each district’s student cell phone rules (e.g., full ban during the school day, silent carry allowed, permitted at lunch). The document provides the details needed to identify the district with the strictest prohibition."
+  },
+  {
+    "id": 7,
+    "db_id": "california_schools",
+    "question": "Within the county that has the most active continuation high schools with reported K–12 enrollment, which district requires the fewest total credits to graduate according to the county office’s graduation requirements compendium?",
+    "nl2sql_question": "Which county has the largest number of active continuation high schools with nonzero K–12 enrollment?",
+    "sql_answer": "SELECT s.County FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE s.StatusType = 'Active' AND s.EdOpsCode = 'CON' AND f.\"Enrollment (K-12)\" > 0 GROUP BY s.County ORDER BY COUNT(DISTINCT s.CDSCode) DESC LIMIT 1;",
+    "doc_type": "collection_rule",
+    "doc_desc": "collection_rule: A county office–published graduation requirements compendium covering all districts within the identified county, listing total credit requirements for high school graduation per district to compare and determine which district has the lowest requirement."
+  },
+  {
+    "id": 8,
+    "db_id": "california_schools",
+    "question": "Within the district whose active high schools have the highest average SAT writing score among districts that include at least one continuation school, which high school allows the shortest window to submit make-up work after an excused absence according to the district’s academic policies compendium?",
+    "nl2sql_question": "Identify the school district with the highest average SAT writing score across its active high schools, limited to districts that have at least one active continuation school.",
+    "sql_answer": "SELECT s.dname FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE sc.StatusType = 'Active' AND sc.EILCode = 'HS' AND s.NumTstTakr > 0 AND EXISTS (SELECT 1 FROM schools sc2 WHERE sc2.District = sc.District AND sc2.StatusType = 'Active' AND (sc2.EdOpsCode = 'CON' OR sc2.SOCType = 'Continuation High Schools')) GROUP BY s.dname ORDER BY AVG(s.AvgScrWrite) DESC LIMIT 1;",
+    "doc_type": "collection_rule",
+    "doc_desc": "collection_rule: A district-wide academic policies compendium that spans all high schools in the selected district, detailing each school’s make-up work rules after excused absences (e.g., deadlines and time windows), enabling comparison to identify the school with the shortest allowed window."
+  },
+  {
+    "id": 9,
+    "db_id": "california_schools",
+    "question": "Within the county that has the largest number of active charter schools, which district sets the lowest daily screen time limit for elementary students according to the county office’s technology use guidelines?",
+    "nl2sql_question": "Which county has the highest count of active charter schools?",
+    "sql_answer": "SELECT County FROM schools WHERE StatusType='Active' AND Charter=1 GROUP BY County ORDER BY COUNT(*) DESC LIMIT 1;",
+    "doc_type": "collection_rule",
+    "doc_desc": "collection_rule: A county office of education technology use guidelines compendium covering all districts within the identified county, with district-by-district entries that specify elementary student screen time limits so the district with the lowest limit can be identified."
+  }
+]

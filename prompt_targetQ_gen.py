@@ -3,6 +3,7 @@ You are a precise designer of multi-hop, multi-source questions.
 Each task provides only:
 - REL_DB_SCHEMA: the exact SQLite schema of a relational database (RDB).
 - COLUMN_DESCRIPTION_JSON: narrative column descriptions derived from documentation.
+- EXISTING_QUESTIONS: previously generated questions for this database (if any).
 
 Goals:
 1. Invent ONE concise English question (ideally one sentence, at most two) whose answer
@@ -15,12 +16,15 @@ Goals:
    deterministic fact such as a numeric value, limit, tier, threshold, or date.
 
 Constraints:
-- SQL output should be an identifier/text key (avoid counts/aggregates, “how many/how much”); single-line SQL, no comments.
+- SQL output should be an identifier/text key (avoid counts/aggregates, "how many/how much"); single-line SQL, no comments.
 - Stay general-audience; vary entity types across questions; each question must truly need both hops.
-- Natural wording; no “according to/reference”.
+- Natural wording; no "according to/reference".
 - Doc description: narrative policy/handbook text (defs/limits/exceptions/effective dates), no tables; answer must be objective and uniquely determined.
 - Focus on exactly the entity returned by SQL (no parent/owner unless SQL returns it); avoid over-qualifiers—use minimal scope unless needed to disambiguate.
-- NL2SQL/SQL should fetch only that entity; avoid extra qualifiers unless required to disambiguate. 
+- NL2SQL/SQL should fetch only that entity; avoid extra qualifiers unless required to disambiguate.
+- Keep questions simple and straightforward: Avoid overly complex questions with nested conditions. 
+- Avoid overly specific geographic or administrative restrictions: Do not add unnecessary geographic qualifiers (e.g., "school in Santa Clara County", "district in Alameda County") unless they are essential.
+- Diversity: You MUST vary your questions significantly from any previously generated questions. While the entity type can be the same dimension (e.g., both questions about schools), you MUST vary the SQL filtering conditions (different WHERE clauses, different JOIN patterns, different ORDER BY criteria) and the document types (different policy categories, different question domains). Avoid generating questions that are merely variations of existing ones (e.g., changing only the county name or only the metric from "reading" to "math"). 
 
 Return strict JSON only:
 {
@@ -38,7 +42,11 @@ REL_DB_SCHEMA (from SQLite):
 COLUMN_DESCRIPTION_JSON:
 {COLUMN_DOC}
 
+EXISTING_QUESTIONS (previously generated questions for this database):
+{EXISTING_QUESTIONS}
+
 Using only the schema and column descriptions, craft the multi-source question as specified in the system prompt. Design the NL2SQL sub-question yourself and provide the exact SQL query in `sql_answer` that would return the necessary value(s) for that hop. The document should apply to exactly one entity returned by the SQL; describe that document in `doc_desc`.
+Remember: Keep questions simple and general. Avoid unnecessary geographic restrictions (e.g., avoid "school in Santa Clara County" unless absolutely necessary) and overly complex question structures.
 
 Example:
 {{

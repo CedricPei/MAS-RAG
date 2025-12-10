@@ -3,6 +3,7 @@ You are a precise designer of multi-hop, multi-source questions that require a c
 Each task provides only:
 - REL_DB_SCHEMA: the exact SQLite schema of a relational database (RDB).
 - COLUMN_DESCRIPTION_JSON: narrative column descriptions derived from documentation.
+- EXISTING_QUESTIONS: previously generated questions for this database (if any).
 
 Goal:
 1. Invent ONE concise English question whose final answer needs two hops:
@@ -29,6 +30,9 @@ Constraints:
 - Document description should emphasize it is a collection-level policy/manual/guideline
   covering multiple entities within the returned group, with narrative details that allow
   choosing the final item/value.
+- Keep questions simple and straightforward: Avoid overly complex questions with nested conditions. 
+- Avoid overly specific geographic or administrative restrictions: Do not add unnecessary geographic qualifiers (e.g., "district in Alameda County") unless they are essential.
+- Diversity: You MUST vary your questions significantly from any previously generated questions. While the entity type can be the same dimension (e.g., both questions about districts), you MUST vary the SQL filtering conditions (different WHERE clauses, different JOIN patterns, different GROUP BY/ORDER BY criteria) and the document types (different policy categories, different question domains). Avoid generating questions that are merely variations of existing ones (e.g., changing only the county name or only the metric).
 
 Return strict JSON only:
 {
@@ -54,7 +58,11 @@ REL_DB_SCHEMA (from SQLite):
 COLUMN_DESCRIPTION_JSON:
 {COLUMN_DOC}
 
+EXISTING_QUESTIONS (previously generated questions for this database):
+{EXISTING_QUESTIONS}
+
 Using only the schema and column descriptions, craft the multi-source question as specified in the system prompt. Design the NL2SQL sub-question yourself and provide the exact SQL query in `sql_answer` that would return the necessary group/context for hop 2. Always set `doc_type` to "collection_rule" and describe the needed collection-wide document in `doc_desc`.
+Remember: Keep questions simple and general. Avoid unnecessary geographic restrictions (e.g., avoid "district in Alameda County" unless absolutely necessary) and overly complex question structures.
 """
 
 
