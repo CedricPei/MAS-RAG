@@ -8,15 +8,17 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 
-from question_doc_prompt import SYSTEM_PROMPT, USER_PROMPT
+from prompt_targetQ_gen import SYSTEM_PROMPT as TARGET_SYSTEM_PROMPT, USER_PROMPT as TARGET_USER_PROMPT
+from prompt_collectQ_gen import SYSTEM_PROMPT as COLLECTION_SYSTEM_PROMPT, USER_PROMPT as COLLECTION_USER_PROMPT
 
 DB_ROOT = Path("dev_databases")
 OUTPUT_PATH = "multi_source_questions.json"
 TARGET_DB_IDS = [
     "california_schools",
-    "superhero",
+    # "superhero",
 ]
-QUESTION_PER_DB = 5
+TARGET_QUESTION_PER_DB = 5
+COLLECTION_QUESTION_PER_DB = 0
 
 
 def escape_braces(text: str) -> str:
@@ -89,35 +91,63 @@ def main() -> None:
         schema_text = load_schema_from_sqlite(db_id)
         column_doc_text = load_column_doc(db_id)
 
-        for _ in tqdm(range(QUESTION_PER_DB), desc=f"Generating for {db_id}", unit="q"):
-            user_prompt = USER_PROMPT.format(
-                SCHEMA=escape_braces(schema_text),
-                COLUMN_DOC=escape_braces(column_doc_text),
-            )
-
-            response = client.chat.completions.create(
+        # Targeted questions (generate one by one)
+        user_prompt = TARGET_USER_PROMPT.format(
+            SCHEMA=escape_braces(schema_text),
+            COLUMN_DOC=escape_braces(column_doc_text),
+        )
+        for _ in tqdm(range(TARGET_QUESTION_PER_DB), desc=f"Generating targeted for {db_id}", unit="q"):
+            targeted_resp = client.chat.completions.create(
                 model=model_name,
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": TARGET_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=0,
+                temperature=0.8,
                 response_format={"type": "json_object"},
             )
-            content = response.choices[0].message.content or "{}"
+            content = targeted_resp.choices[0].message.content or "{}"
             obj = json.loads(content)
-
             record = {
                 "id": next_id,
                 "db_id": db_id,
                 "question": obj.get("question"),
                 "nl2sql_question": obj.get("nl2sql_question"),
                 "sql_answer": obj.get("sql_answer"),
-                "doc_type": obj.get("doc_type"),
+                "doc_type": "targeted_rule",
                 "doc_desc": obj.get("doc_desc"),
             }
             next_id += 1
+            existing.append(record)
+            with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+                json.dump(existing, f, ensure_ascii=False, indent=2)
 
+        collection_prompt = COLLECTION_USER_PROMPT.format(
+            SCHEMA=escape_braces(schema_text),
+            COLUMN_DOC=escape_braces(column_doc_text),
+        )
+        for _ in tqdm(range(COLLECTION_QUESTION_PER_DB), desc=f"Generating collection for {db_id}", unit="q"):
+            collection_resp = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": COLLECTION_SYSTEM_PROMPT},
+                    {"role": "user", "content": collection_prompt},
+                ],
+                temperature=0.4,
+                response_format={"type": "json_object"},
+            )
+            content = collection_resp.choices[0].message.content or "{}"
+            obj = json.loads(content)
+            record = {
+                "id": next_id,
+                "db_id": db_id,
+                "question": obj.get("question"),
+                "nl2sql_question": obj.get("nl2sql_question"),
+                "sql_answer": obj.get("sql_answer"),
+                "doc_type": "collection_rule",
+                "doc_desc": obj.get("doc_desc"),
+            }
+            next_id += 1
             existing.append(record)
             with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
                 json.dump(existing, f, ensure_ascii=False, indent=2)

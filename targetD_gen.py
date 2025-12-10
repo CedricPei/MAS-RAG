@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 
-from doc_prompt import SYSTEM_PROMPT, USER_PROMPT
+from prompt_targetD_gen import SYSTEM_PROMPT, USER_PROMPT
 
 INPUT_PATH = Path("multi_source_questions_with_target.json")
 OUTPUT_PATH = Path("multi_source_docs.json")
@@ -31,22 +31,22 @@ def main() -> None:
 
     docs: List[Dict[str, Any]] = []
 
-    for record in tqdm(records, desc="Generating docs", unit="q"):
-        target = record.get("target_object")
-        if target is None:
-            continue
+    targeted_records = [r for r in records if r.get("doc_type") == "targeted_rule"]
 
+    for record in tqdm(targeted_records, desc="Generating docs", unit="q"):
+        db_instance = record.get("db_instance")
+        
         question = record.get("question") or ""
         nl2sql_question = record.get("nl2sql_question") or ""
         doc_desc = record.get("doc_desc") or ""
 
-        target_json = json.dumps(target, ensure_ascii=False, indent=2)
+        db_instance_json = json.dumps(db_instance, ensure_ascii=False, indent=2)
 
         user_prompt = USER_PROMPT.format(
             QUESTION=escape_braces(question),
             NL2SQL_QUESTION=escape_braces(nl2sql_question),
             DOC_DESC=escape_braces(doc_desc),
-            TARGET_JSON=escape_braces(target_json),
+            DB_INSTANCE_JSON=escape_braces(db_instance_json),
         )
 
         response = client.chat.completions.create(
@@ -57,7 +57,7 @@ def main() -> None:
             ],
             temperature=0,
             response_format={"type": "json_object"},
-        )
+        ) 
         content = response.choices[0].message.content or "{}"
         obj = json.loads(content)
 
@@ -65,11 +65,6 @@ def main() -> None:
             "id": record.get("id"),
             "db_id": record.get("db_id"),
             "question": question,
-            "nl2sql_question": nl2sql_question,
-            "sql_answer": record.get("sql_answer"),
-            "doc_type": record.get("doc_type"),
-            "doc_desc": doc_desc,
-            "target_object": target,
             "doc": obj.get("doc"),
             "answer": obj.get("answer"),
         }

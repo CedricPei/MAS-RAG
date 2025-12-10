@@ -13,6 +13,7 @@ def main() -> None:
     with QUESTIONS_PATH.open("r", encoding="utf-8") as f:
         records = json.load(f)
 
+    kept_records = []
     updated_count = 0
 
     for record in tqdm(records, desc="Executing SQL", unit="q"):
@@ -31,13 +32,15 @@ def main() -> None:
             rows = cursor.fetchall()
             conn.close()
         except Exception:
-            record["target_object"] = ["error"]
+            continue
         else:
-            record["target_object"] = [dict(row) for row in rows]
-            updated_count += 1
+            if rows:
+                record["db_instance"] = [dict(row) for row in rows]
+                updated_count += 1
+                kept_records.append(record)
 
     with OUTPUT_PATH.open("w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
+        json.dump(kept_records, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
