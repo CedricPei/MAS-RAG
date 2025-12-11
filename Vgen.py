@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -7,35 +8,32 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 
-from prompt_targetD_gen import SYSTEM_PROMPT, USER_PROMPT
+from prompt_vgen import SYSTEM_PROMPT, USER_PROMPT
 
-INPUT_PATH = Path("multi_source_questions_with_target.json")
-OUTPUT_PATH = Path("multi_source_docs.json")
+INPUT_BASE = Path("dataset")
+OUTPUT_BASE = Path("dataset")
 
 
 def escape_braces(text: str) -> str:
     return text.replace("{", "{{").replace("}", "}}")
 
 
-def main() -> None:
-    load_dotenv(override=False)
+def process_db(db_id: str, client: OpenAI, model_name: str) -> None:
+    db_dir = INPUT_BASE / db_id
+    input_path = db_dir / f"exe_rv_{db_id}.json"
+    if not input_path.exists():
+        print(f"Input not found: {input_path}")
+        return
 
-    client = OpenAI(
-        base_url=os.environ["OPENAI_BASE_URL"],
-        api_key=os.environ["OPENAI_API_KEY"],
-    )
-    model_name = "gpt-5"
-
-    with INPUT_PATH.open("r", encoding="utf-8") as f:
+    with input_path.open("r", encoding="utf-8") as f:
         records: List[Dict[str, Any]] = json.load(f)
 
     docs: List[Dict[str, Any]] = []
+    targeted_records = [r for r in records if r.get("doc_type") == "rv"]
+    output_path = db_dir / f"rv_doc_{db_id}.json"
 
-    targeted_records = [r for r in records if r.get("doc_type") == "targeted_rule"]
-
-    for record in tqdm(targeted_records, desc="Generating docs", unit="q"):
+    for record in tqdm(targeted_records, desc=f"Generating docs for {db_id}", unit="q"):
         db_instance = record.get("db_instance")
-        
         question = record.get("question") or ""
         nl2sql_question = record.get("nl2sql_question") or ""
         doc_desc = record.get("doc_desc") or ""
@@ -57,9 +55,8 @@ def main() -> None:
             ],
             temperature=0,
             response_format={"type": "json_object"},
-        ) 
-        content = response.choices[0].message.content or "{}"
-        obj = json.loads(content)
+        )
+        obj = json.loads(response.choices[0].message.content or "{}")
 
         doc_record: Dict[str, Any] = {
             "id": record.get("id"),
@@ -69,9 +66,26 @@ def main() -> None:
             "answer": obj.get("answer"),
         }
         docs.append(doc_record)
-
-        with OUTPUT_PATH.open("w", encoding="utf-8") as out_f:
+        with output_path.open("w", encoding="utf-8") as out_f:
             json.dump(docs, out_f, ensure_ascii=False, indent=2)
+
+
+def main() -> None:
+    load_dotenv(override=False)
+
+    client = OpenAI(
+        base_url=os.environ["OPENAI_BASE_URL"],
+        api_key=os.environ["OPENAI_API_KEY"],
+    )
+    model_name = "openai/gpt-5"
+
+    if len(sys.argv) > 1:
+        process_db(sys.argv[1], client, model_name)
+        return
+
+    for db_dir in INPUT_BASE.iterdir():
+        if db_dir.is_dir():
+            process_db(db_dir.name, client, model_name)
 
 
 if __name__ == "__main__":

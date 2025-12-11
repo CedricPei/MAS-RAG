@@ -1,0 +1,58 @@
+[
+  {
+    "id": 0,
+    "db_id": "superhero",
+    "question": "For the publisher of the tallest female superhero who has Telepathy, what is the maximum page count permitted for a one-shot in its submissions guidelines?",
+    "nl2sql_question": "Which publisher publishes the tallest female superhero who has the Telepathy power?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero sh JOIN gender g ON sh.gender_id = g.id JOIN hero_power hp ON hp.hero_id = sh.id JOIN superpower sp ON sp.id = hp.power_id JOIN publisher p ON sh.publisher_id = p.id WHERE g.gender = 'Female' AND sp.power_name = 'Telepathy' AND sh.height_cm IS NOT NULL AND sh.height_cm > 0 ORDER BY sh.height_cm DESC, sh.superhero_name ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Submissions Guidelines for the identified publisher — a narrative policy document that explicitly states the maximum page count allowed for a one-shot (single-issue) submission, including any exceptions; return the standard page-limit number.",
+    "db_instance": [
+      {
+        "publisher_name": "DC Comics"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "db_id": "superhero",
+    "question": "For the publisher of the good-aligned superhero with the highest Intelligence who also has Time Travel, what is the standard net payment term for freelancer invoices in its vendor onboarding guide?",
+    "nl2sql_question": "Which publisher publishes the good-aligned superhero with the highest Intelligence who also possesses the 'Time Travel' power?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN alignment a ON s.alignment_id = a.id JOIN hero_attribute ha ON ha.hero_id = s.id JOIN attribute at ON at.id = ha.attribute_id JOIN hero_power hp ON hp.hero_id = s.id JOIN superpower sp ON sp.id = hp.power_id WHERE a.alignment = 'Good' AND at.attribute_name = 'Intelligence' AND sp.power_name = 'Time Travel' ORDER BY ha.attribute_value DESC, s.superhero_name ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Vendor Onboarding Guide or Accounts Payable Policy for the identified publisher — narrative section that states the default freelancer invoice payment term (e.g., net 30 days), giving a single clear number of days for standard payment timing, excluding negotiable exceptions.",
+    "db_instance": [
+      {
+        "publisher_name": "Marvel Comics"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "db_id": "superhero",
+    "question": "For the publisher of the lightest superhero with green skin who has Regeneration, what is the standard cooling-off period (in days) for direct-market order cancellations in its retailer terms?",
+    "nl2sql_question": "Which publisher publishes the lightest superhero (non-missing weight) whose skin color is Green and who has the Regeneration power?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN colour c ON s.skin_colour_id = c.id JOIN hero_power hp ON s.id = hp.hero_id JOIN superpower sp ON hp.power_id = sp.id JOIN publisher p ON s.publisher_id = p.id WHERE c.colour = 'Green' AND sp.power_name = 'Regeneration' AND s.weight_kg IS NOT NULL AND s.weight_kg > 0 ORDER BY s.weight_kg ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Retailer Terms and Ordering Policy for the identified publisher — narrative clauses stating the standard cooling-off period, in days, during which a placed direct-market order may be canceled without penalty (including any stated default period and exceptions).",
+    "db_instance": [
+      {
+        "publisher_name": "Marvel Comics"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "db_id": "superhero",
+    "question": "For the publisher of the bad-aligned superhero who has Flight and the highest combined Strength and Durability, what is the standard per-night cap for domestic lodging reimbursements in its travel and expense policy?",
+    "nl2sql_question": "Which publisher publishes the bad-aligned superhero with Flight whose Strength and Durability attributes sum to the highest value?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN alignment al ON s.alignment_id = al.id JOIN hero_power hp ON hp.hero_id = s.id JOIN superpower sp ON sp.id = hp.power_id JOIN hero_attribute ha1 ON ha1.hero_id = s.id JOIN attribute a1 ON a1.id = ha1.attribute_id JOIN hero_attribute ha2 ON ha2.hero_id = s.id JOIN attribute a2 ON a2.id = ha2.attribute_id WHERE al.alignment = 'Bad' AND sp.power_name = 'Flight' AND a1.attribute_name = 'Strength' AND a2.attribute_name = 'Durability' ORDER BY (ha1.attribute_value + ha2.attribute_value) DESC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Travel and Expense Policy for the identified publisher — narrative clause specifying the standard per-night reimbursement cap for domestic lodging.",
+    "db_instance": [
+      {
+        "publisher_name": "DC Comics"
+      }
+    ]
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": 0,
+    "db_id": "california_schools",
+    "question": "For the district that oversees the active magnet high school with the highest average SAT math score, what total number of credits is required for a standard high school diploma in its graduation requirements policy?",
+    "nl2sql_question": "Which school district oversees the active magnet high school with the highest average SAT math score?",
+    "sql_answer": "SELECT sc.District FROM satscores AS sa JOIN schools AS sc ON sa.cds = sc.CDSCode WHERE sc.StatusType = 'Active' AND sc.Magnet = 1 AND sc.EILCode = 'HS' ORDER BY sa.AvgScrMath DESC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Graduation Requirements policy/handbook for the identified school district — narrative section that states the total number of credits (units) required for a standard high school diploma (baseline requirement, excluding alternative/continuation or specialized diplomas) and any effective date. The document should clearly specify a single numeric total (e.g., 220 credits).",
+    "db_instance": [
+      {
+        "District": "Fremont Unified"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "db_id": "california_schools",
+    "question": "For the traditional school with the most SAT test takers, how many unexcused absences trigger the first truancy notice in its attendance policy?",
+    "nl2sql_question": "Which traditional (EdOpsCode = 'TRAD') school has the highest number of SAT test takers?",
+    "sql_answer": "SELECT sc.School FROM schools sc JOIN satscores sat ON sc.CDSCode = sat.cds WHERE sc.EdOpsCode = 'TRAD' ORDER BY sat.NumTstTakr DESC, sc.School ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Attendance policy or student handbook for the identified school — narrative section that defines the threshold for issuing the first truancy notice/letter, specifying the exact number of unexcused absences that triggers it (including any term/semester scope or immediate-notice exceptions).",
+    "db_instance": [
+      {
+        "School": "Granada Hills Charter High"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "db_id": "california_schools",
+    "question": "For the active non-charter public high school with the highest percentage of students eligible for free or reduced-price meals, what minimum GPA is required for students to participate in athletics per its student handbook?",
+    "nl2sql_question": "Which active, non-charter public high school has the highest percentage of students eligible for free or reduced-price meals (K–12)?",
+    "sql_answer": "SELECT s.School FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE s.StatusType = 'Active' AND s.Charter = 0 AND s.EILCode = 'HS' ORDER BY f.\"Percent (%) Eligible FRPM (K-12)\" DESC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Student athletics eligibility section of the identified high school’s handbook — narrative policy that states the minimum GPA students must maintain to participate in interscholastic athletics.",
+    "db_instance": [
+      {
+        "School": "Alpine County Secondary Community Day"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "db_id": "california_schools",
+    "question": "For the charter school with the highest proportion of SAT takers scoring 1500 or higher, how many community service hours are required for graduation in its student handbook?",
+    "nl2sql_question": "Which charter school has the highest proportion of SAT test takers whose total SAT scores are at least 1500?",
+    "sql_answer": "SELECT s.sname FROM satscores AS s JOIN schools AS sch ON s.cds = sch.CDSCode WHERE sch.Charter = 1 AND s.NumTstTakr > 0 ORDER BY 1.0 * s.NumGE1500 / s.NumTstTakr DESC, s.sname ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Student handbook or graduation requirements policy for the identified charter school — narrative section that explicitly states the total number of community service hours students must complete to graduate (a single numeric requirement).",
+    "db_instance": [
+      {
+        "sname": "Pacific Collegiate Charter"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "db_id": "california_schools",
+    "question": "For the active non-charter high school that reported SAT scores and opened the earliest, what is the annual parking permit fee per vehicle in its student parking policy?",
+    "nl2sql_question": "Which active, non-charter high school that has SAT results recorded opened the earliest?",
+    "sql_answer": "SELECT s.School FROM schools s JOIN satscores sat ON s.CDSCode = sat.cds WHERE s.StatusType = 'Active' AND s.Charter = 0 AND s.EILCode = 'HS' AND s.OpenDate IS NOT NULL ORDER BY s.OpenDate ASC LIMIT 1;",
+    "doc_type": "rv",
+    "doc_desc": "Student Parking Policy or Student Handbook section for the identified high school—narrative text that sets the annual parking permit fee per vehicle for students (a single explicit dollar amount), including any stated conditions or effective school year.",
+    "db_instance": [
+      {
+        "School": "Santa Ynez Valley Union High"
+      }
+    ]
+  }
+]
