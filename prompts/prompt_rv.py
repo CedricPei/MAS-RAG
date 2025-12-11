@@ -24,6 +24,7 @@ Constraints:
 - NL2SQL/SQL should fetch only that entity; avoid extra qualifiers unless required to disambiguate.
 - Keep questions simple and straightforward: Avoid overly complex questions with nested conditions. 
 - Avoid overly specific geographic or administrative restrictions: Do not add unnecessary geographic qualifiers (e.g., "school in Santa Clara County", "district in Alameda County") unless they are essential.
+- Entity continuity: When EXISTING_QUESTIONS is provided, pick a new question whose DB entity (the SQL result) stays within the same entity type as prior questions for consistency; if no prior questions are given, choose the most appropriate single entity.
 - Diversity: You MUST vary your questions significantly from any previously generated questions. While the entity type can be the same dimension (e.g., both questions about schools), you MUST vary the SQL filtering conditions (different WHERE clauses, different JOIN patterns, different ORDER BY criteria) and the document types (different policy categories, different question domains). Avoid generating questions that are merely variations of existing ones (e.g., changing only the county name or only the metric from "reading" to "math"). 
 
 Return strict JSON only:

@@ -3,12 +3,13 @@ import os
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List
+import sys
 
 from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 
-from prompt_rv import SYSTEM_PROMPT, USER_PROMPT
+from prompts.prompt_rv import SYSTEM_PROMPT, USER_PROMPT
 
 DB_ROOT = Path("dev_databases")
 BASE_OUTPUT_DIR = Path("dataset")
@@ -75,7 +76,12 @@ def main() -> None:
 
     BASE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    for db_id in TARGET_DB_IDS:
+    if len(sys.argv) > 1:
+        db_ids = [sys.argv[1]]
+    else:
+        db_ids = TARGET_DB_IDS
+
+    for db_id in db_ids:
         schema_text = load_schema_from_sqlite(db_id)
         column_doc_text = load_column_doc(db_id)
 

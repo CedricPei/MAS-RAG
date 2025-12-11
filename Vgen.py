@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 
-from prompt_vgen import SYSTEM_PROMPT, USER_PROMPT
+from prompts.prompt_vgen import SYSTEM_PROMPT, USER_PROMPT
 
 INPUT_BASE = Path("dataset")
 OUTPUT_BASE = Path("dataset")

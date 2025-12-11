@@ -2,46 +2,46 @@
   {
     "id": 0,
     "db_id": "superhero",
-    "question": "For the publisher of the tallest female superhero who has Telepathy, what is the maximum page count permitted for a one-shot in its submissions guidelines?",
-    "nl2sql_question": "Which publisher publishes the tallest female superhero who has the Telepathy power?",
-    "sql_answer": "SELECT p.publisher_name FROM superhero sh JOIN gender g ON sh.gender_id = g.id JOIN hero_power hp ON hp.hero_id = sh.id JOIN superpower sp ON sp.id = hp.power_id JOIN publisher p ON sh.publisher_id = p.id WHERE g.gender = 'Female' AND sp.power_name = 'Telepathy' AND sh.height_cm IS NOT NULL AND sh.height_cm > 0 ORDER BY sh.height_cm DESC, sh.superhero_name ASC LIMIT 1;",
+    "question": "For the publisher that has the lightest bad-aligned superhero with a recorded weight, what is the standard unsolicited submissions response time (in weeks) stated in its submissions guidelines?",
+    "nl2sql_question": "Which publisher publishes the lightest bad-aligned superhero whose weight is known (non-null and greater than zero)?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero AS sh JOIN publisher AS p ON sh.publisher_id = p.id JOIN alignment AS a ON sh.alignment_id = a.id WHERE sh.weight_kg IS NOT NULL AND sh.weight_kg > 0 AND UPPER(a.alignment) = 'BAD' ORDER BY sh.weight_kg ASC, p.publisher_name ASC LIMIT 1;",
     "doc_type": "rv",
-    "doc_desc": "Submissions Guidelines for the identified publisher — a narrative policy document that explicitly states the maximum page count allowed for a one-shot (single-issue) submission, including any exceptions; return the standard page-limit number."
+    "doc_desc": "Submissions Guidelines for the identified publisher — narrative policy text that states the standard response time, in weeks, for unsolicited submissions (pitches/manuscripts), including any default timeframe used when no exceptions apply."
   },
   {
     "id": 1,
     "db_id": "superhero",
-    "question": "For the publisher of the good-aligned superhero with the highest Intelligence who also has Time Travel, what is the standard net payment term for freelancer invoices in its vendor onboarding guide?",
-    "nl2sql_question": "Which publisher publishes the good-aligned superhero with the highest Intelligence who also possesses the 'Time Travel' power?",
-    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN alignment a ON s.alignment_id = a.id JOIN hero_attribute ha ON ha.hero_id = s.id JOIN attribute at ON at.id = ha.attribute_id JOIN hero_power hp ON hp.hero_id = s.id JOIN superpower sp ON sp.id = hp.power_id WHERE a.alignment = 'Good' AND at.attribute_name = 'Intelligence' AND sp.power_name = 'Time Travel' ORDER BY ha.attribute_value DESC, s.superhero_name ASC LIMIT 1;",
+    "question": "For the publisher associated with the tallest female superhero who has both Flight and Telepathy and a recorded height, what is the standard invoice payment term (in days) stated in its vendor payment policy?",
+    "nl2sql_question": "Which publisher is linked to the tallest female superhero who possesses both the Flight and Telepathy powers and has a non-null, non-zero recorded height?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN gender g ON s.gender_id = g.id WHERE g.gender = 'Female' AND s.height_cm IS NOT NULL AND s.height_cm > 0 AND EXISTS (SELECT 1 FROM hero_power hp JOIN superpower sp ON hp.power_id = sp.id WHERE hp.hero_id = s.id AND sp.power_name = 'Flight') AND EXISTS (SELECT 1 FROM hero_power hp2 JOIN superpower sp2 ON hp2.power_id = sp2.id WHERE hp2.hero_id = s.id AND sp2.power_name = 'Telepathy') ORDER BY s.height_cm DESC, p.publisher_name ASC LIMIT 1;",
     "doc_type": "rv",
-    "doc_desc": "Vendor Onboarding Guide or Accounts Payable Policy for the identified publisher — narrative section that states the default freelancer invoice payment term (e.g., net 30 days), giving a single clear number of days for standard payment timing, excluding negotiable exceptions."
+    "doc_desc": "Vendor Payment Policy or Accounts Payable terms for the identified publisher — narrative clause that states the standard invoice payment term in days (e.g., Net 30) for freelancers/contractors."
   },
   {
     "id": 2,
     "db_id": "superhero",
-    "question": "For the publisher of the lightest superhero with green skin who has Regeneration, what is the standard cooling-off period (in days) for direct-market order cancellations in its retailer terms?",
-    "nl2sql_question": "Which publisher publishes the lightest superhero (non-missing weight) whose skin color is Green and who has the Regeneration power?",
-    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN colour c ON s.skin_colour_id = c.id JOIN hero_power hp ON s.id = hp.hero_id JOIN superpower sp ON hp.power_id = sp.id JOIN publisher p ON s.publisher_id = p.id WHERE c.colour = 'Green' AND sp.power_name = 'Regeneration' AND s.weight_kg IS NOT NULL AND s.weight_kg > 0 ORDER BY s.weight_kg ASC LIMIT 1;",
+    "question": "For the publisher associated with the superhero who has the highest Combat attribute among blond-haired heroes, what is the maximum gift value an employee may accept without prior approval in its ethics policy?",
+    "nl2sql_question": "Which publisher is associated with the superhero who has the highest Combat attribute among heroes with blond hair?",
+    "sql_answer": "SELECT p.publisher_name FROM hero_attribute ha JOIN attribute a ON ha.attribute_id = a.id JOIN superhero s ON ha.hero_id = s.id JOIN colour c ON s.hair_colour_id = c.id JOIN publisher p ON s.publisher_id = p.id WHERE a.attribute_name = 'Combat' AND c.colour = 'Blond' ORDER BY ha.attribute_value DESC LIMIT 1;",
     "doc_type": "rv",
-    "doc_desc": "Retailer Terms and Ordering Policy for the identified publisher — narrative clauses stating the standard cooling-off period, in days, during which a placed direct-market order may be canceled without penalty (including any stated default period and exceptions)."
+    "doc_desc": "Ethics and compliance policy (gifts and entertainment) for the identified publisher—narrative section that explicitly states the maximum dollar amount employees may accept as a gift without prior approval, including any broad exceptions and the effective date."
   },
   {
     "id": 3,
     "db_id": "superhero",
-    "question": "For the publisher of the neutral-aligned superhero with blue eyes who has the highest Speed attribute, what is the maximum file size (in MB) allowed for portfolio submissions in its artist recruitment FAQs?",
-    "nl2sql_question": "Which publisher publishes the neutral-aligned superhero with blue eyes who has the highest Speed attribute?",
-    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN alignment a ON s.alignment_id = a.id JOIN colour c ON s.eye_colour_id = c.id JOIN hero_attribute ha ON ha.hero_id = s.id JOIN attribute at ON at.id = ha.attribute_id JOIN publisher p ON s.publisher_id = p.id WHERE a.alignment = 'neutral' AND c.colour = 'Blue' AND at.attribute_name = 'Speed' ORDER BY ha.attribute_value DESC, s.id ASC LIMIT 1;",
+    "question": "For the publisher associated with the heaviest red-eyed Android superhero with a recorded weight, what is the default password expiration period (in days) stated in its IT security policy?",
+    "nl2sql_question": "Which publisher is linked to the heaviest superhero who is of race 'Android', has red eyes, and has a recorded (non-null, non-zero) weight?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN race r ON s.race_id = r.id JOIN colour ce ON s.eye_colour_id = ce.id WHERE r.race = 'Android' AND ce.colour = 'Red' AND s.weight_kg IS NOT NULL AND s.weight_kg > 0 ORDER BY s.weight_kg DESC, s.superhero_name ASC LIMIT 1;",
     "doc_type": "rv",
-    "doc_desc": "Artist Recruitment FAQs for the identified publisher — narrative guidance that explicitly states the maximum per-file upload size permitted for portfolio submissions (in megabytes), including any simple exception notes; the text clearly yields a single numeric MB limit."
+    "doc_desc": "IT Security or Password Policy for the identified publisher — narrative policy text that explicitly states the standard/default password expiration period for regular user accounts (e.g., “passwords expire every 90 days”), providing a single, organization-wide value; ignore any exceptions for privileged or service accounts."
   },
   {
     "id": 4,
     "db_id": "superhero",
-    "question": "For the publisher of the bad-aligned superhero who has Flight and the highest combined Strength and Durability, what is the standard per-night cap for domestic lodging reimbursements in its travel and expense policy?",
-    "nl2sql_question": "Which publisher publishes the bad-aligned superhero with Flight whose Strength and Durability attributes sum to the highest value?",
-    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN alignment al ON s.alignment_id = al.id JOIN hero_power hp ON hp.hero_id = s.id JOIN superpower sp ON sp.id = hp.power_id JOIN hero_attribute ha1 ON ha1.hero_id = s.id JOIN attribute a1 ON a1.id = ha1.attribute_id JOIN hero_attribute ha2 ON ha2.hero_id = s.id JOIN attribute a2 ON a2.id = ha2.attribute_id WHERE al.alignment = 'Bad' AND sp.power_name = 'Flight' AND a1.attribute_name = 'Strength' AND a2.attribute_name = 'Durability' ORDER BY (ha1.attribute_value + ha2.attribute_value) DESC LIMIT 1;",
+    "question": "For the publisher associated with the shortest male, green-haired superhero who has both Invisibility and Super Speed and a recorded height, what is the default email retention period (in days) in its data retention policy?",
+    "nl2sql_question": "Which publisher is linked to the shortest male superhero with green hair who possesses both Invisibility and Super Speed and has a non-missing height?",
+    "sql_answer": "SELECT p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id JOIN gender g ON s.gender_id = g.id JOIN colour hc ON s.hair_colour_id = hc.id JOIN hero_power hp1 ON s.id = hp1.hero_id JOIN superpower sp1 ON hp1.power_id = sp1.id JOIN hero_power hp2 ON s.id = hp2.hero_id JOIN superpower sp2 ON hp2.power_id = sp2.id WHERE g.gender = 'Male' AND hc.colour = 'Green' AND sp1.power_name = 'Invisibility' AND sp2.power_name = 'Super Speed' AND s.height_cm IS NOT NULL AND s.height_cm > 0 ORDER BY s.height_cm ASC LIMIT 1;",
     "doc_type": "rv",
-    "doc_desc": "Travel and Expense Policy for the identified publisher — narrative clause specifying the standard per-night reimbursement cap for domestic lodging."
+    "doc_desc": "Data Retention Policy (or Records Management Policy) for the identified publisher — narrative text that specifies the organization-wide default email retention period expressed as a single duration in days (the baseline policy value; not a table, and not an exception-specific period)."
   }
 ]

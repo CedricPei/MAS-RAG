@@ -34,12 +34,14 @@ Constraints:
 - Do NOT invent or refer to SQL. Treat DB_INSTANCE as already-computed factual data.
 - DO NOT explain your reasoning or refer to "multi-hop" or "databases" in the document.
   The document should read like a normal policy/handbook text, not a system log.
+- **Strictly forbid** any mention of SQL, relational databases, NL2SQL_QUESTION, DB_INSTANCE provenance, or database outputs in the doc. The doc must read as a standalone policy/handbook text and must NOT disclose, explain, hint, or label DB_INSTANCE as coming from the database query.
 - The document must be purely narrative prose (paragraphs, sentences). Avoid tables,
   bullet lists, or numbered lists; embed details in sentences instead.
 - Avoid overtly repeating or showcasing the final answer; let it appear only once as part
   of natural narration. No explicit call-outs like "Answer:" or restating it verbatim.
 - The answer string must be unambiguous and directly recoverable from the document.
 - Aim for roughly 500 words of narrative prose to keep context rich while concise.
+- **The doc alone must NOT fully answer the QUESTION.** It should only provide the policy/handbook content. The final answer must require combining this doc with DB_INSTANCE; do not restate or embed the DB_INSTANCE result or tie it back to NL2SQL_QUESTION in the doc.
 
 Return strict JSON only:
 {
